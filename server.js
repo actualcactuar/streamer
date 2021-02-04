@@ -60,15 +60,66 @@ function respondWithFileStream(pathArgs, req, res) {
 }
 
 function respondToStreamView(req, res) {
-    const { params: { streamName }, path } = req;
-    console.log({ streamName, path })
+    const { path } = req;
     const [, file] = path.split('/');
     respondWithFileStream([`${file}.html`], req, res);
 }
 
+function respondToCastView(req, res) {
+    const { path } = req;
+    const [, file] = path.split('/');
+    respondWithFileStream([`${file}.html`], req, res);
+}
+
+const increments = new Map()
+
+function saveStreamBlob(req, res) {
+    const { params: { streamName } } = req;
+
+    const exists = fs.existsSync(path.join('streams',streamName));
+    if(!exists){
+        fs.mkdirSync(path.join('streams', streamName))
+    }
+
+    let increment = increments.get(streamName) || 0;
+
+    const fileStream = fs.createWriteStream(path.join('streams', streamName, `${streamName}-${increment}.webm`));
+    req.pipe(fileStream);
+
+    increment++
+    increments.set(streamName, increment)
+
+    req.on('end', () => {
+        res.status(200).send({ message: 'ok' })
+    })
+
+}
+
+function getStreamData(req,res){
+    const { params: { streamName, fileName } } = req;
+
+    let filePath = path.join(path.join('streams', streamName, fileName));
+
+    const fileExists = fs.existsSync(filePath);
+    if(!fileExists){
+        res.send({message:"requested file does not exist"});
+        return;
+    }
+
+
+    const indexFile = fs.createReadStream(path.join('streams', streamName, fileName));
+
+    indexFile.pipe(res);
+    indexFile.on('end', () => {
+        res.end();
+    })
+}
+
 server.get('/', respondWithFileStream.bind(null, ['index.html']))
-server.get('/cast/:streamName', respondToStreamView)
+server.get('/cast/:streamName', respondToCastView)
+server.post('/cast/:streamName', saveStreamBlob)
 server.get('/view/:streamName', respondToStreamView)
+server.get('/stream/:streamName/:fileName', getStreamData)
 server.use(respondWithFileStream.bind(null, null))
 
 https.createServer(options, server).listen(8443);
