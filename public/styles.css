@@ -31,3 +31,10 @@
     background-color: var(--palette-bg);
     color: var(--palette-text);
   }
+  a {
+    color: var(--palette-main);
+  }
+
+  a:active{
+    color: var(--palette-accent);
+  }
