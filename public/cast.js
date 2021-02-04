@@ -3,6 +3,7 @@ const btn = document.getElementById('btn');
 const stop = document.getElementById('stop');
 const range = document.getElementById('range');
 const codec = 'video/webm;codecs="vp9,opus"'
+const { streamName } = params;
 
 const chunks = [];
 
@@ -34,13 +35,13 @@ async function stream() {
 
         blob.arrayBuffer().then(buffer => {
             const uInt8Buffer = new Uint8Array(buffer);
-            fetch(`/cast/${params.streamName}`, {
+            fetch(`/cast/${streamName}`, {
                 method: 'POST',
                 body: uInt8Buffer,
                 headers: { 'Content-Type': 'application/octet-stream' }
             })
-            .then(result => console.log(result))
-            .catch(err => console.warn(err))
+                .then(result => console.log(result))
+                .catch(err => console.warn(err))
         })
     }
 
@@ -53,4 +54,7 @@ async function stream() {
     }
 }
 
+btn.disabled = !streamName;
+range.disabled = !streamName;
+stop.disabled = !streamName;
 btn.onclick = stream;

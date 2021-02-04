@@ -5,7 +5,6 @@ const express = require('express');
 const path = require('path');
 const server = express();
 const stream = require('stream');
-const readline = require('readline');
 
 const options = {
     key: fs.readFileSync('key.pem'),
@@ -24,7 +23,6 @@ function resolveResponseFilePath(pathArgs, requestPath) {
     return responseFilePath;
 }
 
-
 const fileStreamTransform = (appendToHead = '') =>
     new stream.Transform({
         transform(buffer, enc, done) {
@@ -32,7 +30,6 @@ const fileStreamTransform = (appendToHead = '') =>
             const lines = str.split('\n');
             const formatted = lines.map(line => {
                 if (/\<\/head\>/.test(line)) {
-                    console.log('HEAD')
                     return [appendToHead, line].join('\n');
                 }
                 return line;
@@ -42,7 +39,6 @@ const fileStreamTransform = (appendToHead = '') =>
             done();
         },
     });
-
 
 function respondWithFileStream(pathArgs, req, res) {
     try {
@@ -106,12 +102,9 @@ function getStreamData(req,res){
         res.send({message:"requested file does not exist"});
         return;
     }
-
-
-    const indexFile = fs.createReadStream(path.join('streams', streamName, fileName));
-
-    indexFile.pipe(res);
-    indexFile.on('end', () => {
+    const fileStream = fs.createReadStream(path.join('streams', streamName, fileName));
+    fileStream.pipe(res);
+    fileStream.on('end', () => {
         res.end();
     })
 }
