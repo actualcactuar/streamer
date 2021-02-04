@@ -77,7 +77,7 @@ function saveStreamBlob(req, res) {
     }
     const indexFileName = path.join('streams', streamName, 'index.json');
     const indexFileExists = fs.existsSync(indexFileName);
-    const data = indexFileExists && fs.readFileSync(indexFileName) || Buffer.from('{ "live": true, "files": [] }');
+    const data = indexFileExists && fs.readFileSync(indexFileName) || Buffer.from('{ "files": [] }');
     const string = data.toString()
     const json = JSON.parse(string);
     const increment = json.files.length;

@@ -18,16 +18,9 @@ videoSource.addEventListener('sourceopen', async () => {
     for (const file of files) {
         const url = `/stream/${streamName}/${file}`;
         const response = await fetch(url, { headers: { 'Content-Type': 'application/octet-stream' } });
-
-        const reader = response.body.getReader()
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            sourceBuffer.appendBuffer(value);
-            await once('onupdateend', sourceBuffer);
-        }
-
+        const buffer = await response.arrayBuffer();
+        sourceBuffer.appendBuffer(buffer);
+        await once('onupdateend', sourceBuffer);
     }
 
     videoSource.endOfStream();

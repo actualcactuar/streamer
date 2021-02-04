@@ -5,7 +5,6 @@ const range = document.getElementById('range');
 const codec = 'video/webm;codecs="vp9,opus"'
 const { streamName } = params;
 
-const chunks = [];
 
 async function stream() {
     const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
@@ -29,15 +28,12 @@ async function stream() {
     recorder.start(4000);
 
     recorder.ondataavailable = (event) => {
-        console.log(event)
         const { data: blob } = event;
-        chunks.push(blob);
 
         blob.arrayBuffer().then(buffer => {
-            const uInt8Buffer = new Uint8Array(buffer);
             fetch(`/cast/${streamName}`, {
                 method: 'POST',
-                body: uInt8Buffer,
+                body: buffer,
                 headers: { 'Content-Type': 'application/octet-stream' }
             })
                 .then(result => console.log(result))
