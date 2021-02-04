@@ -31,7 +31,8 @@ const fileStreamTransform = (appendToHead = '') =>
             const str = buffer.toString()
             const lines = str.split('\n');
             const formatted = lines.map(line => {
-                if (/^\<\/head\>$/.test(line)) {
+                if (/\<\/head\>/.test(line)) {
+                    console.log('HEAD')
                     return [appendToHead, line].join('\n');
                 }
                 return line;
@@ -48,7 +49,7 @@ function respondWithFileStream(pathArgs, req, res) {
         const responseFilePath = resolveResponseFilePath(pathArgs, req.path)
         const stream = fs.createReadStream(responseFilePath);
         // inject params to end of the head
-        const transform = fileStreamTransform(`<script>const params = ${JSON.stringify(req.params)}</script>`);
+        const transform = fileStreamTransform(`<script>const params = ${JSON.stringify(req.params|| {})}</script>`);
         stream.pipe(transform).pipe(res);
         transform.on('end', () => {
             res.end();
