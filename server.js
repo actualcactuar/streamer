@@ -45,7 +45,7 @@ function respondWithFileStream(pathArgs, req, res) {
         const responseFilePath = resolveResponseFilePath(pathArgs, req.path)
         const stream = fs.createReadStream(responseFilePath);
         // inject params to end of the head
-        const transform = fileStreamTransform(`<script>const params = ${JSON.stringify(req.params|| {})}</script>`);
+        const transform = fileStreamTransform(`<script>const params = ${JSON.stringify(req.params || {})}</script>`);
         stream.pipe(transform).pipe(res);
         transform.on('end', () => {
             res.end();
@@ -68,38 +68,39 @@ function respondToCastView(req, res) {
     respondWithFileStream([`${file}.html`], req, res);
 }
 
-const increments = new Map()
-
 function saveStreamBlob(req, res) {
     const { params: { streamName } } = req;
 
-    const exists = fs.existsSync(path.join('streams',streamName));
-    if(!exists){
+    const exists = fs.existsSync(path.join('streams', streamName));
+    if (!exists) {
         fs.mkdirSync(path.join('streams', streamName))
     }
+    const indexFileName = path.join('streams', streamName, 'index.json');
+    const indexFileExists = fs.existsSync(indexFileName);
+    const data = indexFileExists && fs.readFileSync(indexFileName) || Buffer.from('{ "live": true, "files": [] }');
+    const string = data.toString()
+    const json = JSON.parse(string);
+    const increment = json.files.length;
+    const fileName = `${streamName}-${increment}.webm`;
+    const fileStream = fs.createWriteStream(path.join('streams', streamName, fileName));
 
-    let increment = increments.get(streamName) || 0;
-
-    const fileStream = fs.createWriteStream(path.join('streams', streamName, `${streamName}-${increment}.webm`));
+    json.files.push(fileName)
+    fs.writeFileSync(indexFileName, JSON.stringify(json));
+    
     req.pipe(fileStream);
-
-    increment++
-    increments.set(streamName, increment)
-
     req.on('end', () => {
         res.status(200).send({ message: 'ok' })
     })
-
 }
 
-function getStreamData(req,res){
+function getStreamData(req, res) {
     const { params: { streamName, fileName } } = req;
 
     let filePath = path.join(path.join('streams', streamName, fileName));
 
     const fileExists = fs.existsSync(filePath);
-    if(!fileExists){
-        res.send({message:"requested file does not exist"});
+    if (!fileExists) {
+        res.send({ message: "requested file does not exist" });
         return;
     }
     const fileStream = fs.createReadStream(path.join('streams', streamName, fileName));
