@@ -43,7 +43,7 @@ videoSource.addEventListener('sourceopen', async () => {
             lastRead = file;
         }
 
-        if(!newFiles.length){
+        if(!newFiles.length && videoSource.readyState !== 'ended'){
             videoSource.endOfStream();
         }
 
