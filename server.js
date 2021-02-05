@@ -116,11 +116,25 @@ function getStreamData(req, res) {
     })
 }
 
+async function endStream(req, res) {
+    try {
+        const { params: { streamName } } = req;
+        const fileHandle = await fs.promises.open(path.join(STREAM_DIR, streamName, 'index.txt'), 'a+');
+        await fileHandle.appendFile('\nEND');
+        await fileHandle.close()
+        res.send({ message: "Stream ended!" })
+    } catch (err) {
+        console.log(err)
+    }
+
+}
+
 server.get('/', respondWithFileStream.bind(null, ['index.html']))
 server.get('/cast/:streamName', respondToCastView)
 server.post('/cast/:streamName', saveStreamBlob)
 server.get('/view/:streamName', respondToStreamView)
 server.get('/stream/:streamName/:fileName', getStreamData)
+server.patch('/streamend/:streamName', endStream)
 server.use(respondWithFileStream.bind(null, null))
 
 https.createServer(options, server).listen(8443);

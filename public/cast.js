@@ -6,6 +6,15 @@ const codec = 'video/webm;codecs="vp9,opus"'
 const { streamName } = params;
 
 
+async function sendBlob(blob) {
+    const buffer = await blob.arrayBuffer()
+    return fetch(`/cast/${streamName}`, {
+        method: 'POST',
+        body: buffer,
+        headers: { 'Content-Type': 'application/octet-stream' }
+    })
+}
+
 async function stream() {
     const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
     const videoStream = new MediaStream(mediaStream.getVideoTracks());
@@ -27,18 +36,16 @@ async function stream() {
     const recorder = new MediaRecorder(mediaStream, { mimeType: codec });
     recorder.start(4000);
 
-    recorder.ondataavailable = (event) => {
+    recorder.ondataavailable = async (event) => {
         const { data: blob } = event;
 
-        blob.arrayBuffer().then(buffer => {
-            fetch(`/cast/${streamName}`, {
-                method: 'POST',
-                body: buffer,
-                headers: { 'Content-Type': 'application/octet-stream' }
-            })
-                .then(result => console.log(result))
-                .catch(err => console.warn(err))
-        })
+        console.log(event)
+        await sendBlob(blob);
+
+        if (recorder.state === 'inactive') {
+            await fetch(`/streamend/${streamName}`, { method: 'PATCH' });
+        }
+
     }
 
     stop.onclick = () => {
