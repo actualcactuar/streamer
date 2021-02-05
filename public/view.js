@@ -1,6 +1,8 @@
+import { getPreferredCodec } from './codecs.js'
 const { streamName } = params;
 const video = document.getElementById('video');
-const codec = 'video/webm;codecs="vp9,opus"'
+const codec = getPreferredCodec();
+console.log({ codec, streamName })
 
 const once = (eventName, eventTarget) => new Promise((resolve) => {
     eventTarget[eventName] = resolve;
@@ -14,9 +16,10 @@ async function fetchStreamContent(sourceBuffer) {
     const response = await fetch(`/stream/${streamName}/index.txt`);
     if (!response.ok) return;
     const lines = (await response.text()).split('\n');
-    const linesToRead = lastRead ? lines.slice(lines.indexOf(lastRead)+1): lines;
+    const linesToRead = lastRead ? lines.slice(lines.indexOf(lastRead) + 1) : lines;
 
     for (const line of linesToRead) {
+        console.log(line)
         lastRead = line;
         if (line === 'END') {
             videoSource.endOfStream()
@@ -33,9 +36,15 @@ async function fetchStreamContent(sourceBuffer) {
 videoSource.addEventListener('sourceopen', async () => {
     console.log('SOURCE OPEN!')
     const sourceBuffer = videoSource.addSourceBuffer(codec);
-    await fetchStreamContent(sourceBuffer);
+    console.log('FAIL')
+    await fetchStreamContent(sourceBuffer).catch(() => {
 
-    if(lastRead !== 'END'){
+        if (lastRead !== 'END') {
+            video.currentTime = video.buffered.end(0) - 4;
+        }
+    });
+
+    if (lastRead !== 'END') {
         video.currentTime = video.buffered.end(0) - 4;
     }
 

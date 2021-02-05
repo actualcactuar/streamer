@@ -1,9 +1,11 @@
+import { getPreferredCodec } from './codecs.js'
 const video = document.getElementById('video');
 const btn = document.getElementById('btn');
 const stop = document.getElementById('stop');
 const range = document.getElementById('range');
-const codec = 'video/webm;codecs="vp9,opus"'
+const codec = getPreferredCodec();
 const { streamName } = params;
+console.log({ codec, streamName })
 
 
 async function sendBlob(blob) {
