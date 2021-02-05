@@ -133,21 +133,3 @@ fs.promises.stat(STREAM_DIR).catch(({ code }) => {
         fs.promises.mkdir(STREAM_DIR);
     }
 });
-
-// const test = async () => {
-//     try {
-//         const result = await fs.promises.stat('test').catch(err => err);
-//         if (result instanceof Error && result.code === 'ENOENT') {
-//             await fs.promises.mkdir('test');
-//         }
-//         const fileHandle = await fs.promises.open(path.join('test', 'foo.txt'), 'a+');
-//         const buffer = await fileHandle.readFile();
-//         const text = buffer.toString();
-//         fileHandle.appendFile('foobar\n');
-//         fileHandle.close();
-//     } catch (err) {
-//         console.log(err)
-//     }
-
-// }
-// test()
