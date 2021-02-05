@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streamer | Cast</title>    
+    <link rel="stylesheet" href="/public/styles.css" />
+    <script src="/public/client.js" defer type="module"></script>
+    <script src="/public/cast.js" defer type="module"></script>
+    <link rel="icon" href="/public/favicon.png" type="image/x-icon" />
+</head>
+<body>
+    <h1>Cast here!</h1>
+    <video autoplay id="video"></video>
+    <br/>
+    <input type="range" min="0" max="1" id="range" step="0.1" value="0.5"/>
+    <button id="btn">start</button>
+    <button id="stop">stop</button>
+</body>
+</html>

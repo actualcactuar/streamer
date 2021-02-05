@@ -1,0 +1,40 @@
+
+:root {
+    --font-body: 400 1rem 'Roboto', sans-serif;
+    --font-title: 200 2rem 'Roboto', sans-serif;
+    --palette-main: #0076ff;
+    --palette-accent: #59cc96;
+    --palette-bg: #f7faff;
+    --palette-fg: #f9fdff;
+    --palette-text: #525a6c;
+    --palette-main-rgb: 0, 118, 255;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --palette-bg: #323232;
+      --palette-fg: #272727;
+      --palette-text: #fefefe;
+      --palette-accent: #31a56f;
+      --palette-main: #0076ff;
+      --palette-main-rgb: 0, 118, 255;
+    }
+  }
+  
+  html {
+    font-size: 16px;
+  }
+  
+  body {
+    margin: 0;
+    font: var(--font-body);
+    background-color: var(--palette-bg);
+    color: var(--palette-text);
+  }
+  a {
+    color: var(--palette-main);
+  }
+
+  a:active{
+    color: var(--palette-accent);
+  }
