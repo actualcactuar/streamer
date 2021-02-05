@@ -90,7 +90,7 @@ async function saveStreamBlob(req, res) {
         await fileHandle.appendFile(textToAppend);
         fileHandle.close();
 
-        const fileStream = fs.createWriteStream(path.join('streams', streamName, fileName));
+        const fileStream = fs.createWriteStream(path.join(STREAM_DIR, streamName, fileName));
         req.pipe(fileStream);
         req.on('end', () => {
             res.status(200).send({ message: 'ok' });
@@ -102,14 +102,14 @@ async function saveStreamBlob(req, res) {
 function getStreamData(req, res) {
     const { params: { streamName, fileName } } = req;
 
-    let filePath = path.join(path.join('streams', streamName, fileName));
+    let filePath = path.join(path.join(STREAM_DIR, streamName, fileName));
 
     const fileExists = fs.existsSync(filePath);
     if (!fileExists) {
         res.status(404).send({ message: "requested file does not exist" });
         return;
     }
-    const fileStream = fs.createReadStream(path.join('streams', streamName, fileName));
+    const fileStream = fs.createReadStream(path.join(STREAM_DIR, streamName, fileName));
     fileStream.pipe(res);
     fileStream.on('end', () => {
         res.end();
