@@ -5,6 +5,7 @@ const express = require('express');
 const path = require('path');
 const server = express();
 const stream = require('stream');
+const STREAM_DIR = 'streams';
 
 const options = {
     key: fs.readFileSync('key.pem'),
@@ -68,29 +69,34 @@ function respondToCastView(req, res) {
     respondWithFileStream([`${file}.html`], req, res);
 }
 
-function saveStreamBlob(req, res) {
-    const { params: { streamName } } = req;
+async function saveStreamBlob(req, res) {
+    try {
+        const { params: { streamName } } = req;
 
-    const exists = fs.existsSync(path.join('streams', streamName));
-    if (!exists) {
-        fs.mkdirSync(path.join('streams', streamName))
+        const dirPath = path.join(STREAM_DIR, streamName)
+
+        const result = await fs.promises.stat(dirPath).catch(err => err);
+        if (result instanceof Error && result.code === 'ENOENT') {
+            await fs.promises.mkdir(dirPath);
+        }
+
+        const fileHandle = await fs.promises.open(path.join(dirPath, 'index.txt'), 'a+');
+        const text = (await fileHandle.readFile()).toString();
+        const lines = text && text.split('\n') || [];
+        const increment = lines.length;
+
+        const fileName = `${streamName}-${increment}.webm`;
+        const textToAppend = increment ? `\n${fileName}` : fileName;
+        await fileHandle.appendFile(textToAppend);
+        fileHandle.close();
+
+        const fileStream = fs.createWriteStream(path.join('streams', streamName, fileName));
+        req.pipe(fileStream);
+        req.on('end', () => {
+            res.status(200).send({ message: 'ok' });
+        })
+    } catch (err) {
     }
-    const indexFileName = path.join('streams', streamName, 'index.json');
-    const indexFileExists = fs.existsSync(indexFileName);
-    const data = indexFileExists && fs.readFileSync(indexFileName) || Buffer.from('{ "files": [] }');
-    const string = data.toString()
-    const json = JSON.parse(string);
-    const increment = json.files.length;
-    const fileName = `${streamName}-${increment}.webm`;
-    const fileStream = fs.createWriteStream(path.join('streams', streamName, fileName));
-
-    json.files.push(fileName)
-    fs.writeFileSync(indexFileName, JSON.stringify(json));
-    
-    req.pipe(fileStream);
-    req.on('end', () => {
-        res.status(200).send({ message: 'ok' })
-    })
 }
 
 function getStreamData(req, res) {
@@ -100,7 +106,7 @@ function getStreamData(req, res) {
 
     const fileExists = fs.existsSync(filePath);
     if (!fileExists) {
-        res.send({ message: "requested file does not exist" });
+        res.status(404).send({ message: "requested file does not exist" });
         return;
     }
     const fileStream = fs.createReadStream(path.join('streams', streamName, fileName));
@@ -119,3 +125,29 @@ server.use(respondWithFileStream.bind(null, null))
 
 https.createServer(options, server).listen(8443);
 http.createServer(server).listen(9090);
+
+
+// Create directory for streams if doesn't exist
+fs.promises.stat(STREAM_DIR).catch(({ code }) => {
+    if (code === 'ENOENT') {
+        fs.promises.mkdir(STREAM_DIR);
+    }
+});
+
+// const test = async () => {
+//     try {
+//         const result = await fs.promises.stat('test').catch(err => err);
+//         if (result instanceof Error && result.code === 'ENOENT') {
+//             await fs.promises.mkdir('test');
+//         }
+//         const fileHandle = await fs.promises.open(path.join('test', 'foo.txt'), 'a+');
+//         const buffer = await fileHandle.readFile();
+//         const text = buffer.toString();
+//         fileHandle.appendFile('foobar\n');
+//         fileHandle.close();
+//     } catch (err) {
+//         console.log(err)
+//     }
+
+// }
+// test()
