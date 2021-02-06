@@ -1,8 +1,19 @@
-import { getPreferredCodec } from './codecs.js'
+
 const video = document.getElementById('video');
 const btn = document.getElementById('btn');
 const stop = document.getElementById('stop');
 const range = document.getElementById('range');
+
+function getPreferredCodec() {
+    const codecs = [
+        'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
+        'video/webm; codecs="vp9,opus"',
+        'video/webm; codecs="vp8,vorbis"',
+    ]
+    const [preferredCodec] = codecs.filter(c => MediaSource.isTypeSupported(c) && MediaRecorder.isTypeSupported(c));
+    return preferredCodec;
+}
+
 const codec = getPreferredCodec();
 const { streamName } = params;
 console.log({ codec, streamName })
@@ -13,7 +24,7 @@ async function sendBlob(blob) {
     return fetch(`/cast/${streamName}`, {
         method: 'POST',
         body: buffer,
-        headers: { 'Content-Type': 'application/octet-stream' }
+        headers: { 'Content-Type': 'application/octet-stream', codec }
     })
 }
 

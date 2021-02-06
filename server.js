@@ -71,10 +71,16 @@ function respondToCastView(req, res) {
 
 async function saveStreamBlob(req, res) {
     try {
-        const { params: { streamName } } = req;
+        const { params: { streamName }, headers: { codec } } = req;
 
-        const dirPath = path.join(STREAM_DIR, streamName)
+        if (!codec) {
+            res.status(400).send({ message: "Missing codec" }).end();
+            return;
+        }
+        const ext = codec.slice(codec.indexOf('/') + 1, codec.indexOf(';'));
+        const dirPath = path.join(STREAM_DIR, streamName);
 
+        console.log({ codec, ext })
         const result = await fs.promises.stat(dirPath).catch(err => err);
         if (result instanceof Error && result.code === 'ENOENT') {
             await fs.promises.mkdir(dirPath);
@@ -82,12 +88,13 @@ async function saveStreamBlob(req, res) {
 
         const fileHandle = await fs.promises.open(path.join(dirPath, 'index.txt'), 'a+');
         const text = (await fileHandle.readFile()).toString();
-        const lines = text && text.split('\n') || [];
-        const increment = lines.length;
+        // set codec as first line
+        if(!text) await fileHandle.appendFile(codec);
 
-        const fileName = `${streamName}-${increment}.webm`;
-        const textToAppend = increment ? `\n${fileName}` : fileName;
-        await fileHandle.appendFile(textToAppend);
+        const lines = text && text.split('\n') || [codec];
+        const increment = lines.length;
+        const fileName = `${streamName}-${increment}.${ext}`;
+        await fileHandle.appendFile(`\n${fileName}`);
         fileHandle.close();
 
         const fileStream = fs.createWriteStream(path.join(STREAM_DIR, streamName, fileName));
